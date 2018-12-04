@@ -114,13 +114,13 @@ while(user1 ~= 666)
         end
         if (DEGJOINT3 < 0)
             DEGJOINT3 = DEGJOINT3*(-1);
-            steps = JOINT3/5.625;
+            steps = DEGJOINT3;
             steps = round(steps);
             steps = uint8(steps);
             steps = steps + uint8(mask);
             fwrite(s,steps,'uint8');
         else
-            steps = DEGJOINT3/5.625;
+            steps = DEGJOINT3;
             steps = round(steps);
             steps = uint8(steps);
             fwrite(s, steps, 'uint8');
