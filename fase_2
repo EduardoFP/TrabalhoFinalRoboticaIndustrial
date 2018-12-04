@@ -1,0 +1,138 @@
+int pins1[] { 
+    2,  //IN2
+    3,  //IN3 
+    4,  //IN4
+    5  //IN5
+};
+int pins2[] { 
+    6,  //IN6
+    7,  //IN7 
+    8,  //IN8
+    9  //IN9
+};
+int pins3[] { 
+    10,  //IN10
+    11, //IN11 
+    12, //IN12
+    13  //IN13
+};
+
+byte received1;
+byte received2;
+byte received3;
+int value1;
+int value2;
+int value3;
+byte mask = 128;
+bool clockwise1 = true;
+bool clockwise2 = true;
+bool clockwise3 = true;
+
+int fullStepCount = 4;
+int fullSteps[][4] = {
+    {HIGH,HIGH,LOW,LOW},
+    {LOW,HIGH,HIGH,LOW},
+    {LOW,LOW,HIGH,HIGH},
+    {HIGH,LOW,LOW,HIGH}
+  };
+
+
+int targetSteps1 = 0;
+
+int targetSteps2 = 0;
+
+int targetSteps3 = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);  
+  
+  for(int pin = 0; pin < 4; pin++) {
+    pinMode(pins1[pin], OUTPUT);
+    digitalWrite(pins1[pin], LOW);
+  }
+  for(int pin = 0; pin < 4; pin++) {
+    pinMode(pins2[pin], OUTPUT);
+    digitalWrite(pins2[pin], LOW);
+  }
+  for(int pin = 0; pin < 4; pin++) {
+    pinMode(pins3[pin], OUTPUT);
+    digitalWrite(pins3[pin], LOW);
+  }
+}
+
+void singlestep(int steps[][4], int stepCount, int atualStep1, int atualStep2, int atualStep3, int able1, int able2, int able3) {
+
+  int currentStepInSequence1 = atualStep1 % stepCount;
+  int currentStepInSequence2 = atualStep2 % stepCount;
+  int currentStepInSequence3 = atualStep3 % stepCount;
+  int directionStep1 = clockwise1 ? currentStepInSequence1 : (stepCount-1) - currentStepInSequence1;
+  int directionStep2 = clockwise2 ? currentStepInSequence2 : (stepCount-1) - currentStepInSequence2;
+  int directionStep3 = clockwise3 ? currentStepInSequence3 : (stepCount-1) - currentStepInSequence3;  
+  for(int pin=0; pin < 4; pin++){
+    if (able1 == 0){
+      digitalWrite(pins1[pin],steps[directionStep1][pin]);
+    }
+    if (able2 == 0){
+      digitalWrite(pins2[pin],steps[directionStep2][pin]);
+    }
+    if (able3 == 0){
+      digitalWrite(pins3[pin],steps[directionStep3][pin]);
+    }
+  }  
+}
+
+void loop() {
+      if(Serial.available()>0){
+        delay(500);
+        received1 = Serial.read();
+        received2 = Serial.read();
+        received3 = Serial.read();
+        int currentStep1 = 0;
+        int able1 = 0;
+        int able2 = 0;
+        int able3 = 0;
+        clockwise1 = true;
+        value1 = (int)received1;
+        if (value1 > 64){
+          clockwise1 = false;
+          received1 = received1 - mask;
+          value1 = (int)received1;
+        }
+        targetSteps1 = value1*1;
+        int currentStep2 = 0;
+        clockwise2 = true;
+        value2 = (int)received2;
+        if (value2 > 64){
+          clockwise2 = false;
+          received2 = received2 - mask;
+          value2 = (int)received2;
+        }
+        targetSteps2 = value2*1;
+        int currentStep3 = 0;
+        clockwise3 = true;
+        value3 = (int)received3;
+        if (value3 > 64){
+          clockwise3 = false;
+          received3 = received3 - mask;
+          value3 = (int)received3;
+        }
+        targetSteps3 = value3*1;
+        while(able1 != 1 || able2 != 1 || able3 != 1){
+          if(currentStep1 >= targetSteps1){
+            able1 = 1;
+          }
+          if(currentStep2 >= targetSteps2){
+            able2 = 1;
+          }
+          if(currentStep2 >= targetSteps3){
+            able3 = 1;
+          }
+          singlestep(fullSteps,fullStepCount,currentStep1,currentStep2,currentStep3,able1,able2,able3);
+          currentStep1=currentStep1+1;
+          currentStep2=currentStep2+1;
+          currentStep3=currentStep3+1;
+          delay(500);
+        }
+      }
+}
