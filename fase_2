@@ -125,7 +125,7 @@ void loop() {
           if(currentStep2 >= targetSteps2){
             able2 = 1;
           }
-          if(currentStep2 >= targetSteps3){
+          if(currentStep3 >= targetSteps3){
             able3 = 1;
           }
           singlestep(fullSteps,fullStepCount,currentStep1,currentStep2,currentStep3,able1,able2,able3);
