@@ -1,0 +1,407 @@
+s=serial('COM4','BAUD', 9600);  % Make sure the baud rate and COM port is the same as in Arduino IDE
+
+fopen(s);
+
+user1 = 0;
+user11 = 0;
+user12 = 0;
+user13 = 0;
+angle_to_joint1 = 7.25/1.8125;
+angle_to_joint2 = 7.25/1.8125;
+milimiter_to_joint3 = 225;
+
+JOINT_got_1 = 0;
+JOINT_got_2 = 0;
+JOINT_got_3 = 0;
+
+JOINT1 = 0;
+JOINT2 = 0;
+JOINT3 = 0;
+
+
+joint_1 = 0;
+joint_2 = 0;
+joint_3 = 0;
+
+A1 = 168;
+A2 = 140 ;
+
+X_ln = 0;
+Y_ln = 0;
+Z_ln = 0;
+
+x = 308;
+y = 0;
+z = 0;
+
+byte_signal = 0;
+byte_length = 0;
+byte_steps = 0;
+byte_resto = 0;
+
+while(user1 ~= 666)
+    user1 = input('Enter "1" for DIRECT KINEMATICS, "2" for INVERSE KINEMATICS, "3" for LINEAR INTERPOLATION or "666" to close: ');
+    if (user1 == 666)
+        if ~isempty(instrfind)
+            fclose(instrfind);
+            delete(instrfind);
+            clear;
+        end
+        return;
+    end
+    if (user1 == 1)
+        user11 = input('Enter the value for JOINT1(degrees, must be =< 180) or "666" to close: ');
+        if (user11 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        JOINT_got_1 = user11;
+        user11 = input('Enter the value for JOINT2(degrees, must be =< 180) or "666" to close: ');
+        if (user11 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        JOINT_got_2 = user11;
+        user11 = input('Enter the value for JOINT3(milimeters) or "666" to close: ');
+        if (user11 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        JOINT_got_3 = user11;
+        JOINT1 = JOINT1 + JOINT_got_1;
+        JOINT2 = JOINT2 + JOINT_got_2;
+        JOINT3 = JOINT3 + JOINT_got_3;
+        x = A1*cos(JOINT1)+A2*cos(JOINT1+JOINT2);
+        y = A1*sin(JOINT1)+A2*sin(JOINT1+JOINT2);
+        z = - JOINT3;
+        if ((x^2 + y^2 > 308^2)&&(x^2 + y^2 < 168^2)||(y<0)) 
+            disp('Destino final fora do volume de trabalho');
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;            
+        end
+        if ((0>JOINT1)||(JOINT1>180)||(-90>JOINT2)||(JOINT2>90))
+            disp('Angulo das juntas ultrapassa o limite');
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;            
+        end
+        disp(x)
+        disp(y)
+        disp(z)
+        if (JOINT_got_1 < 0)
+            JOINT_got_1 = JOINT_got_1*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_1*angle_to_joint1);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_1*angle_to_joint1);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+        if (JOINT_got_2 < 0)
+            JOINT_got_2 = JOINT_got_2*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_2*angle_to_joint2);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_2*angle_to_joint2);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+        if (JOINT_got_3 < 0)
+            JOINT_got_3 = JOINT_got_3*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_3*angle_to_joint3);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(JOINT_got_3*angle_to_joint3);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+    end
+    if (user1 == 2)
+        user12 = input('Enter the value for X or "666" to close: ');
+        if (user12 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        x = user12;
+        user12 = input('Enter the value for Y or "666" to close: ');
+        if (user12 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        y = user12;
+        user12 = input('Enter the value for Z or "666" to close: ');
+        if (user12 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        z = user12;
+        if ((x^2 + y^2 > 308^2)&&(x^2 + y^2 < 168^2)||(y<0)) 
+            disp('Destino final fora do volume de trabalho');
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind); 
+                clear;
+            end
+            return;            
+        end
+        joint_2 = acos((x^2+y^2-A1^2-A2^2)/2*A1*A2);
+        joint_1 = atan(y/x)-atan((A2*sin(joint2))/A1+A2*cos(joint2));
+        if ((0>joint_1)||(joint_1>180)||(-90>joint_2)||(joint_2>90))
+            joint_2 = -acos((x^2+y^2-A1^2-A2^2)/2*A1*A2);
+            joint_1 = atan(y/x)-atan((A2*sin(joint2))/A1+A2*cos(joint2));     
+        end
+        joint_3 = -z;
+        disp(joint_1);
+        disp(joint_2);
+        disp(joint_3);
+        joint_1_need_to_move = joint_1 - JOINT1;
+        joint_2_need_to_move = joint_2 - JOINT2;
+        joint_3_need_to_move = joint_3 - JOINT3;
+        JOINT1 = joint_1;
+        JOINT2 = joint_2;
+        JOINT3 = joint_3;
+        
+        if ((0>JOINT1)||(JOINT1>180)||(-90>JOINT2)||(JOINT2>90))
+            disp('Angulo das juntas ultrapassa o limite');
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;            
+        end
+        
+        if (joint_1_need_to_move < 0)
+            joint_1_need_to_move = joint_1_need_to_move*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_1_need_to_move*angle_to_joint1);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_1_need_to_move*angle_to_joint1);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+        if (joint_2_need_to_move < 0)
+            joint_2_need_to_move = joint_2_need_to_move*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_2_need_to_move*angle_to_joint2);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_2_need_to_move*angle_to_joint2);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+        if (joint_3_need_to_move < 0)
+            joint_3_need_to_move = joint_3_need_to_move*(-1);
+            byte_signal = 1;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_3_need_to_move*angle_to_joint3);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        else
+            byte_signal = 0;
+            steps = byte_signal;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = round(joint_3_need_to_move*angle_to_joint3);
+            byte_resto = mod(steps,255);
+            byte_length = floor(steps/255);
+            steps = byte_length;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+            steps = byte_resto;
+            steps = uint8(steps);
+            fwrite(s,steps,'uint8');
+        end
+    end
+    if (user1 == 3)
+        user13 = input('Enter the value for X or "666" to close: ');
+        if (user13 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        X_ln = user13;
+        user13 = input('Enter the value for Y or "666" to close: ');
+        if (user13 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        Y_ln = user13;
+        user13 = input('Enter the value for Z or "666" to close: ');
+        if (user13 == 666)
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind);
+                clear;
+            end
+            return;
+        end
+        Z_ln = user13;
+        if ((X_ln^2 + Y_ln^2 > 308^2)&&(X_ln^2 + Y_ln^2 < 168^2)||(Y_ln<0)) 
+            disp('Destino final fora do volume de trabalho');
+            if ~isempty(instrfind)
+                fclose(instrfind);
+                delete(instrfind); 
+                clear;
+            end
+            return;            
+        end
+       
+        
+    end
+end   
+if ~isempty(instrfind)
+    fclose(instrfind);
+    delete(instrfind);
+    clear;
+end
